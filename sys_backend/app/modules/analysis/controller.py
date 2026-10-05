@@ -12,11 +12,11 @@ router = APIRouter(prefix="/analysis", tags=["Analysis"])
 
 
 @router.get(
-    "/status",
-    response_model=StatusOverview,
-    summary="Situação atual das vias",
-    description="Retorna a última situação de cada via, ordenada da melhor para a pior, com as vias sem sinal no final e o caminho recomendado.",
-    responses=error_responses(DatabaseUnavailableError),
+  "/status",
+  response_model=StatusOverview,
+  summary="Situação atual das vias",
+  description="Retorna a última situação de cada via, ordenada da melhor para a pior, com as vias sem sinal no final e o caminho recomendado.",
+  responses=error_responses(DatabaseUnavailableError),
 )
 def get_status(db: Client = Depends(get_supabase), settings: Settings = Depends(get_settings)) -> StatusOverview:
-    return service.get_status_overview(db, settings)
+  return service.get_status_overview(db, settings)
