@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, Security
 from supabase import Client
 
 from app.core.config import Settings, get_settings
-from app.core.database import get_supabase
+from app.core.database import get_database
 from app.core.responses import error_responses
 from app.core.security import sensor_key_header
 from app.domain.errors import DatabaseUnavailableError, InvalidApiKeyError, InvalidReadingError, SensorNotFoundError
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/readings", tags=["Readings"])
 
 def get_authenticated_sensor(
   api_key: str | None = Security(sensor_key_header),
-  db: Client = Depends(get_supabase),
+  db: Client = Depends(get_database),
 ) -> SensorOut:
   return sensor_service.authenticate_sensor(db, api_key)
 
@@ -34,7 +34,7 @@ def get_authenticated_sensor(
 def create_reading(
   payload: ReadingIn,
   sensor: SensorOut = Depends(get_authenticated_sensor),
-  db: Client = Depends(get_supabase),
+  db: Client = Depends(get_database),
   settings: Settings = Depends(get_settings),
 ) -> ReadingOut:
   return service.create_reading(db, sensor, payload, settings)
@@ -51,6 +51,6 @@ def list_readings(
   sensor_id: int | None = Query(default=None, description="Filtra por via"),
   since: datetime | None = Query(default=None, description="Início da janela em ISO 8601 (sem fuso = UTC). Padrão: última hora"),
   limit: int = Query(default=500, ge=1, le=1000, description="Quantidade máxima de leituras (teto do Supabase: 1000)"),
-  db: Client = Depends(get_supabase),
+  db: Client = Depends(get_database),
 ) -> list[ReadingOut]:
   return service.list_readings(db, sensor_id, since, limit)

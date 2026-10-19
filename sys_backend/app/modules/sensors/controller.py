@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from supabase import Client
 
-from app.core.database import get_supabase
+from app.core.database import get_database
 from app.core.responses import error_responses
 from app.core.security import require_admin
 from app.domain.errors import DatabaseUnavailableError, InvalidAdminKeyError, SensorNotFoundError
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/sensors", tags=["Sensors"])
   responses=error_responses(InvalidAdminKeyError, DatabaseUnavailableError),
   dependencies=[Depends(require_admin)],
 )
-def create_sensor(payload: SensorCreate, db: Client = Depends(get_supabase)) -> SensorCreated:
+def create_sensor(payload: SensorCreate, db: Client = Depends(get_database)) -> SensorCreated:
   return service.create_sensor(db, payload)
 
 
@@ -31,7 +31,7 @@ def create_sensor(payload: SensorCreate, db: Client = Depends(get_supabase)) -> 
   description="Retorna todas as vias cadastradas, ordenadas por id, com os limites de cada situação.",
   responses=error_responses(DatabaseUnavailableError),
 )
-def list_sensors(db: Client = Depends(get_supabase)) -> list[SensorOut]:
+def list_sensors(db: Client = Depends(get_database)) -> list[SensorOut]:
   return service.list_sensors(db)
 
 
@@ -42,5 +42,5 @@ def list_sensors(db: Client = Depends(get_supabase)) -> list[SensorOut]:
   description="Retorna os dados de uma via cadastrada.",
   responses=error_responses(SensorNotFoundError, DatabaseUnavailableError),
 )
-def get_sensor(sensor_id: int, db: Client = Depends(get_supabase)) -> SensorOut:
+def get_sensor(sensor_id: int, db: Client = Depends(get_database)) -> SensorOut:
   return service.get_sensor(db, sensor_id)

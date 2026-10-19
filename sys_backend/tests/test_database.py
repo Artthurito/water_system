@@ -4,7 +4,11 @@ import httpx
 import pytest
 from postgrest.exceptions import APIError
 
-from app.core.database import execute, get_supabase
+from pydantic import ValidationError
+
+from app.core.cache import CacheDatabase
+from app.core.config import Settings
+from app.core.database import execute, get_database, get_supabase
 from app.domain.errors import DatabaseUnavailableError
 
 
@@ -51,3 +55,41 @@ def test_supabase_client_fails_fast_instead_of_default_120s(settings, monkeypatc
 
   assert client.options.postgrest_client_timeout == 5
   get_supabase.cache_clear()
+
+
+def test_cache_mode_uses_a_single_in_memory_database(monkeypatch):
+  settings = Settings(_env_file=None, db_mode="cache", admin_api_key="admin")
+  monkeypatch.setattr("app.core.database.get_settings", lambda: settings)
+  get_database.cache_clear()
+
+  database = get_database()
+
+  assert isinstance(database, CacheDatabase)
+  assert get_database() is database
+  get_database.cache_clear()
+
+
+def test_supabase_mode_uses_the_supabase_client(settings, monkeypatch):
+  monkeypatch.setattr("app.core.database.get_settings", lambda: settings)
+  get_supabase.cache_clear()
+  get_database.cache_clear()
+
+  assert get_database() is get_supabase()
+  get_supabase.cache_clear()
+  get_database.cache_clear()
+
+
+def test_supabase_mode_requires_credentials():
+  with pytest.raises(ValidationError, match="SUPABASE_URL e SUPABASE_SERVICE_KEY"):
+    Settings(_env_file=None, db_mode="supabase", admin_api_key="admin")
+
+
+def test_cache_mode_does_not_require_supabase_credentials():
+  settings = Settings(_env_file=None, db_mode="cache", admin_api_key="admin")
+
+  assert settings.supabase_url == ""
+
+
+def test_invalid_db_mode_is_rejected():
+  with pytest.raises(ValidationError):
+    Settings(_env_file=None, db_mode="mongo", admin_api_key="admin")
