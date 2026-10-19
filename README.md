@@ -153,6 +153,13 @@ uvicorn main:app --reload
 
 A documentação interativa fica em <http://localhost:8000/docs>.
 
+#### Modo do banco (`DB_MODE`)
+
+| Valor | Comportamento |
+|---|---|
+| `supabase` (padrão) | Usa o Supabase. Exige `SUPABASE_URL` e `SUPABASE_SERVICE_KEY` |
+| `cache` | Guarda sensores e leituras em memória. Não precisa do Supabase nem do passo 1, mas os dados são perdidos ao reiniciar a API e não são compartilhados entre workers do `uvicorn` |
+
 ### 3. Cadastrar as vias
 
 Em `/docs`, clique em **Authorize**, informe a `X-Admin-Key` e use `POST /sensors` para cadastrar
